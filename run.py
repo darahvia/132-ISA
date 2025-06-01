@@ -103,7 +103,7 @@ class Program:
             return Except("Unknown exception: {}".format(value), False)
     
     def run(self):
-        # Get register addres
+        # Get register addresses 
         pc_addr = storage.variable.load('PC', isCode=False)
         ir_addr = storage.variable.load('IR', isCode=False)
         
@@ -112,15 +112,17 @@ class Program:
             ir_val = storage.register.load(ir_addr, isCode=False)
             instruction = storage.memory.load(int(ir_val), isCode=True)
             
+            
             if instruction == '0' * 32 or not instruction:
                 break
-        
-            opcode = instruction[0:5]          
-            op1_mode = instruction[5:8]      
-            op1_addr = instruction[8:16]       
-            op2_mode = instruction[16:19]    
-            op2_addr = instruction[19:27]      
-            extra = instruction[27:32]         
+            
+          
+            opcode = instruction[0:5]           
+            op1_mode = instruction[5:8]         
+            op1_addr = instruction[8:16]        
+            op2_mode = instruction[16:19]       
+            op2_addr = instruction[19:27]       
+            extra = instruction[27:32]          
             
             op_map = {
                 "00000": "PRNT", "00001": "EOP", "01000": "MOV",
@@ -144,6 +146,7 @@ class Program:
             elif write_bit == '1':
                 self.write(op1_value, op2_value, operation)
             else:
+                # Print/end operations
                 if operation == "PRNT":
                     print(f"Printing: {op1_value}")
                 elif operation == "EOP":
@@ -156,7 +159,35 @@ class Program:
     
     def getOp(self, inscode):
 
-      pass
+        mode = inscode[0:3]    
+        addr = inscode[3:]     
+        
+        if mode == '000':  
+            return Precision.spbin2dec(addr)
+        
+        elif mode == '001':  
+            reg_name = f"R{int(addr, 2)}"
+            reg_addr = storage.variable.load(reg_name, isCode=False)
+            return storage.register.load(reg_addr, isCode=False)
+    
+        elif mode == '010':  
+            reg_name = f"R{int(addr, 2)}"
+            reg_addr = storage.variable.load(reg_name, isCode=False)
+            mem_addr = storage.register.load(reg_addr, isCode=False)
+            return storage.memory.load(int(mem_addr), isCode=False)
+        
+        elif mode == '100':  
+            index_reg = storage.variable.load('I1', isCode=False)
+            index_val = storage.register.load(index_reg, isCode=False)
+            displacement = int(addr, 2)
+            return storage.memory.load(index_val + displacement, isCode=False)
+        
+        elif mode == '101':  
+            return AddressingMode.stack("pop")
+        
+       
+        else:
+            raise ValueError(f"Unsupported addressing mode: {mode}")
 
 class Except:
 
@@ -178,4 +209,5 @@ class Except:
     
     def getReturn(self):
         return self.ret
+    
     

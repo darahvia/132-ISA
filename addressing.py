@@ -13,11 +13,11 @@ class Access:
 				if flow_type == "var":
 					# First try to get address from variable storage
 					actual_addr = storage.variable.load(addr)
-					return storage.register.load(actual_addr)
+					return storage.register.load(int(actual_addr))
 				elif flow_type == "reg":
-					return storage.register.load(addr)
+					return storage.register.load(int(addr))
 				elif flow_type == "mem":
-					return storage.memory.load(addr)
+					return storage.memory.load(int(addr))
 			except KeyError:
 				continue
 		
@@ -54,13 +54,13 @@ class AddressingMode:
 		try:
 			# Get the index register value (I1 for first operand, I2 for second)
 			index_addr = storage.variable.load("I1")  # Default to I1
-			index_value = storage.register.load(index_addr)
+			index_value = storage.register.load(int(index_addr))
 			
 			# Calculate effective address using Precision for proper conversion
 			effective_addr = int(Precision.spbin2dec(Precision.dec2spbin(displace + index_value)))
 			
 			# Return the value at the effective address
-			return storage.memory.load(effective_addr)
+			return storage.memory.load(int(effective_addr))
 		except KeyError:
 			raise KeyError(f"Index register not found or invalid displacement")
 	
@@ -68,46 +68,46 @@ class AddressingMode:
 		"""
 		Register addressing mode - returns value from register at reg_addr
 		"""
-		return storage.register.load(reg_addr)
+		return storage.register.load(int(reg_addr))
 	
 	def register_indirect(reg_addr):
 		"""
 		Register indirect addressing mode - register contains address of actual data
 		"""
 		# Get address from register (already converted by storage.load)
-		addr = storage.register.load(reg_addr)
+		addr = storage.register.load(int(reg_addr))
 		# Convert to integer address using Precision
 		mem_addr = int(Precision.spbin2dec(Precision.dec2spbin(addr)))
 		# Use that address to get the actual value from memory
-		return storage.memory.load(mem_addr)
+		return storage.memory.load(int(mem_addr))
 	
 	def direct(var_addr):
 		"""
 		Direct addressing mode - direct access to memory address var_addr
 		"""
-		return storage.memory.load(var_addr)
+		return storage.memory.load(int(var_addr))
 	
 	def indirect(var_addr):
 		"""
 		Indirect addressing mode - memory location contains address of actual data
 		"""
 		# Get address from memory (already converted by storage.load)
-		addr = storage.memory.load(var_addr)
+		addr = storage.memory.load(int(var_addr))
 		# Convert to integer address using Precision
 		mem_addr = int(Precision.spbin2dec(Precision.dec2spbin(addr)))
 		# Use that address to get the actual value
-		return storage.memory.load(mem_addr)
+		return storage.memory.load(int(mem_addr))
 	
 	def autoinc(reg_addr):
 		"""
 		Auto-increment addressing mode - use register value then increment it
 		"""
 		# Get current value from register (already converted by storage.load)
-		addr = storage.register.load(reg_addr)
+		addr = storage.register.load(int(reg_addr))
 		# Convert to integer address for memory access
 		mem_addr = int(Precision.spbin2dec(Precision.dec2spbin(addr)))
 		# Get data from memory at that address
-		data = storage.memory.load(mem_addr)
+		data = storage.memory.load(int(mem_addr))
 		# Increment the register value using Precision
 		incremented = Precision.spbin2dec(Precision.dec2spbin(addr + 1))
 		storage.register.store(reg_addr, incremented)
@@ -118,14 +118,14 @@ class AddressingMode:
 		Auto-decrement addressing mode - decrement register then use its value
 		"""
 		# Get current value from register and decrement using Precision
-		current_addr = storage.register.load(reg_addr)
+		current_addr = storage.register.load(int(reg_addr))
 		decremented = Precision.spbin2dec(Precision.dec2spbin(current_addr - 1))
 		# Store decremented value back to register
 		storage.register.store(reg_addr, decremented)
 		# Convert to integer address for memory access
 		mem_addr = int(Precision.spbin2dec(Precision.dec2spbin(decremented)))
 		# Get data from memory at decremented address
-		return storage.memory.load(mem_addr)
+		return storage.memory.load(int(mem_addr))
 	
 	def stack(stack_option):
 		"""
@@ -139,8 +139,8 @@ class AddressingMode:
 		tsp_addr = storage.variable.load("TSP")
 		
 		# Get current stack pointer and top stack pointer (already converted by storage.load)
-		stack_ptr = storage.register.load(spr_addr)
-		top_stack_ptr = storage.register.load(tsp_addr)
+		stack_ptr = storage.register.load(int(spr_addr))
+		top_stack_ptr = storage.register.load(int(tsp_addr))
 		
 		if stack_option.lower() == "push":
 			# Push: increment TSP and return new top address using Precision

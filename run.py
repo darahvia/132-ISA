@@ -188,6 +188,22 @@ class Program:
        
         else:
             raise ValueError(f"Unsupported addressing mode: {mode}")
+        
+    @staticmethod
+    def exception(name, value):
+
+        if name == "DivisionByZero" and value == 0:
+            return Except("Division by zero exception", True)
+        elif name == "ExecutionError":
+            return Except("Execution error: {}".format(value), True)
+        elif name == "WriteError":
+            return Except("Write error: {}".format(value), True)
+        elif name == "FileNotFound":
+            return Except("File not found: {}".format(value), True)
+        elif name == "InvalidOperation":
+            return Except("Invalid operation: {}".format(value), True)
+        else:
+            return Except("Unknown exception: {}".format(value), False)
 
 class Except:
 

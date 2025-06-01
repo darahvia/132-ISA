@@ -226,4 +226,13 @@ class Except:
     def getReturn(self):
         return self.ret
     
-    
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Usage: python run.py <program_file>")
+        sys.exit(1)
+    filename = sys.argv[1]
+    with open(filename, "r") as f:
+        lines = [line.strip() for line in f if line.strip() and not line.strip().startswith("//")]
+    prog = Program(lines)
+    prog.run()

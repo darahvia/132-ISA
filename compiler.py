@@ -7,41 +7,31 @@ operationCodes = [["00","01","10","11"],["000","001","010","011","100","101","11
 
 class Instruction:
     @staticmethod
-    def preEncode(instrxns):
-        output = []
-        for instr in instrxns:
-            parts = instr.strip().split()
-            if not parts:
-                continue
-
-            op = parts[0].upper()
-
-            if op in ["DEF", "DEV", "DEB"]:
-                continue
-
-            if op in ["JEQ", "JNE", "JLT", "JLE", "JGT", "JGE"] and len(parts) == 4:
-                x, y, z = parts[1], parts[2], parts[3]
-                output.append(f"SUB {x} {y}")
-                output.append(f"{op} {z}")
-                continue
-
-            new_parts = [op]
-            for operand in parts[1:]:
-                if "[" in operand and "]" in operand:
-                    base = operand[:operand.index("[")]
-                    index = operand[operand.index("[") + 1 : operand.index("]")]
-                    if index == "I1":
-                        new_parts.append(f"INDX1 {base}")
-                    elif index == "I2":
-                        new_parts.append(f"INDX2 {base}")
-                    else:
-                        raise Exception(f"Unsupported index register: {index}")
+    def preEncode(instr):
+        # Accept a single instruction string, not a list
+        parts = instr.strip().split()
+        if not parts:
+            return []
+        op = parts[0].upper()
+        if op in ["DEF", "DEV", "DEB"]:
+            return []
+        if op in ["JEQ", "JNE", "JLT", "JLE", "JGT", "JGE"] and len(parts) == 4:
+            x, y, z = parts[1], parts[2], parts[3]
+            return [f"SUB {x} {y}", f"{op} {z}"]
+        new_parts = [op]
+        for operand in parts[1:]:
+            if "[" in operand and "]" in operand:
+                base = operand[:operand.index("[")]
+                index = operand[operand.index("[") + 1 : operand.index("]")]
+                if index == "I1":
+                    new_parts.append(f"INDX1 {base}")
+                elif index == "I2":
+                    new_parts.append(f"INDX2 {base}")
                 else:
-                    new_parts.append(operand)
-
-            output.append(" ".join(new_parts))
-
-        return output
+                    raise Exception(f"Unsupported index register: {index}")
+            else:
+                new_parts.append(operand)
+        return [" ".join(new_parts)]
 
     @staticmethod
     def encode(inst):
@@ -61,7 +51,8 @@ class Instruction:
                 found = True
                 break
         if not found:
-            raise Exception(f"Unknown operation: {op}")
+            print(f"DEBUG: op={op}, parts={parts}, inst={inst}") 
+            raise Exception(f"Unknown operation: {op}")         
 
         op1Mode, op2Mode = "000", "000"
         op1Addr, op2Addr = "00000000", "00000000"
@@ -105,7 +96,7 @@ class Instruction:
             # &R5 or &x (symbolic)
             target = operand[1:]
             if target.startswith("R"):
-                mode = "010"  # direct addressing mode
+                mode = "001"  # direct addressing mode
                 reg_num = int(target[1:])
                 addr = format(reg_num, '08b')
             else:
@@ -157,7 +148,7 @@ class Instruction:
             return mode, addr
 
         if operand.startswith("R"):  # register direct
-            mode = "000"
+            mode = "001"
             reg_num = int(operand[1:])
             addr = format(reg_num, '08b')
             return mode, addr

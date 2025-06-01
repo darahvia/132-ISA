@@ -6,19 +6,32 @@ from convert import Precision, Length
 
 class Program:
     def __init__(self, program):
-
         self.program = self.encode(program)
+        # Load encoded instructions into memory
+        for i, instr in enumerate(self.program):
+            storage.memory.store(i, instr)
+        # Initialize PC and IR to 0
+        storage.register.store(storage.variable.load('PC', isCode=False), 0)
+        storage.register.store(storage.variable.load('IR', isCode=False), 0)
     
     def encode(self, program):
-     
         encoded_program = []
         for instruction in program:
             pre_encoded = self.pre_encode(instruction)
-            if hasattr(compiler.Instruction, 'encode'):
-                encoded = compiler.Instruction.encode(pre_encoded)
+            # If pre_encoded is a list, encode each item
+            if isinstance(pre_encoded, list):
+                for instr in pre_encoded:
+                    if hasattr(compiler.Instruction, 'encode'):
+                        encoded = compiler.Instruction.encode(instr)
+                    else:
+                        encoded = instr
+                    encoded_program.append(encoded)
             else:
-                encoded = pre_encoded
-            encoded_program.append(encoded)
+                if hasattr(compiler.Instruction, 'encode'):
+                    encoded = compiler.Instruction.encode(pre_encoded)
+                else:
+                    encoded = pre_encoded
+                encoded_program.append(encoded)
         return encoded_program
     
     def pre_encode(self, instruction):
@@ -28,52 +41,49 @@ class Program:
         else:
             return instruction
     
-    def execute(self, result, opcode):
-
+    def execute(self, result, opcode, op1=None, op2=None):
         if opcode == "ADD":
-            return result + 1  
+            return (op1 if op1 is not None else 0) + (op2 if op2 is not None else 0)
         elif opcode == "SUB":
-            return result - 1  
+            return (op1 if op1 is not None else 0) - (op2 if op2 is not None else 0)
         elif opcode == "MUL":
-            return result * 2  
+            return (op1 if op1 is not None else 0) * (op2 if op2 is not None else 0)
         elif opcode == "DIV":
-            if result == 0:
+            if op2 == 0:
                 div_exception = self.exception("DivisionByZero", 0)
                 div_exception.dispMSG()
                 return 0
-            return result / 2  
+            return (op1 if op1 is not None else 0) // op2
         elif opcode == "MOD":
-            if result == 0:
+            if op2 == 0:
                 div_exception = self.exception("DivisionByZero", 0)
                 div_exception.dispMSG()
                 return 0
-            return result % 2  
-        
+            return (op1 if op1 is not None else 0) % op2
         elif opcode in ["JEQ", "JNE", "JLT", "JLE", "JGT", "JGE", "JMP"]:
             print("Jump operation: {}".format(opcode))
-            return result
-        
+            return op1
         elif opcode == "CALL":
             print("Call operation")
-            return result
+            return op1
         elif opcode == "RET":
             print("Return operation")
-            return result
+            return op1
         elif opcode == "SCAN":
             print("Scan operation")
-            return result
+            return op1
         elif opcode in ["PRNT", "EOP"]:
             print("Print/End operation")
-            return result
-        
+            return op1
         else:
             raise ValueError("Unsupported opcode: {}".format(opcode))
     
     def write(self, dest, src, movcode):
-
         if movcode == "MOV":
             if hasattr(Access, 'store'):
-                Access.store(dest, src)
+                # You need to determine the correct type ("reg", "mem", or "var")
+                # Here, let's assume register for demonstration:
+                Access.store("reg", dest, src)
             return src
         elif movcode == "PUSH":
             if hasattr(AddressingMode, 'stack'):
@@ -85,7 +95,7 @@ class Program:
             return src
         else:
             raise ValueError("Unsupported movcode: {}".format(movcode))
-    
+        
     @staticmethod
     def exception(name, value):
 
@@ -110,13 +120,11 @@ class Program:
         storage.register.store(ir_addr, storage.register.load(pc_addr, isCode=False))
         while True:
             ir_val = storage.register.load(ir_addr, isCode=False)
-            instruction = storage.memory.load(int(ir_val), isCode=True)
-            
+            instruction = storage.memory.load(int(ir_val), isCode=True)     
             
             if instruction == '0' * 32 or not instruction:
                 break
-            
-          
+               
             opcode = instruction[0:5]           
             op1_mode = instruction[5:8]         
             op1_addr = instruction[8:16]        
@@ -135,8 +143,8 @@ class Program:
             }
             operation = op_map.get(opcode, "UNKNOWN")
             
-            op1_value = self.getOp(op1_mode + op1_addr) if op1_mode != '000' else None
-            op2_value = self.getOp(op2_mode + op2_addr) if op2_mode != '000' else None
+            op1_value = self.getOp(op1_mode + op1_addr)
+            op2_value = self.getOp(op2_mode + op2_addr)
             
             execute_bit = opcode[0]
             write_bit = opcode[1]
@@ -144,7 +152,13 @@ class Program:
             if execute_bit == '1':
                 self.execute(None, operation, op1_value, op2_value)
             elif write_bit == '1':
-                self.write(op1_value, op2_value, operation)
+                if operation == "MOV":
+                    dest_reg_num = int(op1_addr, 2)
+                    dest_reg_name = f"R{dest_reg_num}"
+                    dest_reg_addr = storage.variable.load(dest_reg_name, isCode=False)
+                    self.write(dest_reg_addr, op2_value, operation)
+                else:
+                    self.write(op1_value, op2_value, operation)
             else:
                 # Print/end operations
                 if operation == "PRNT":
@@ -158,52 +172,30 @@ class Program:
             storage.register.store(pc_addr, int(pc_val) + 1)
     
     def getOp(self, inscode):
-
         mode = inscode[0:3]    
         addr = inscode[3:]     
-        
+
         if mode == '000':  
-            return Precision.spbin2dec(addr)
-        
+            # Immediate value, treat as integer
+            return int(addr, 2)
         elif mode == '001':  
             reg_name = f"R{int(addr, 2)}"
             reg_addr = storage.variable.load(reg_name, isCode=False)
             return storage.register.load(reg_addr, isCode=False)
-    
         elif mode == '010':  
             reg_name = f"R{int(addr, 2)}"
             reg_addr = storage.variable.load(reg_name, isCode=False)
             mem_addr = storage.register.load(reg_addr, isCode=False)
             return storage.memory.load(int(mem_addr), isCode=False)
-        
         elif mode == '100':  
             index_reg = storage.variable.load('I1', isCode=False)
             index_val = storage.register.load(index_reg, isCode=False)
             displacement = int(addr, 2)
             return storage.memory.load(index_val + displacement, isCode=False)
-        
         elif mode == '101':  
             return AddressingMode.stack("pop")
-        
-       
         else:
             raise ValueError(f"Unsupported addressing mode: {mode}")
-        
-    @staticmethod
-    def exception(name, value):
-
-        if name == "DivisionByZero" and value == 0:
-            return Except("Division by zero exception", True)
-        elif name == "ExecutionError":
-            return Except("Execution error: {}".format(value), True)
-        elif name == "WriteError":
-            return Except("Write error: {}".format(value), True)
-        elif name == "FileNotFound":
-            return Except("File not found: {}".format(value), True)
-        elif name == "InvalidOperation":
-            return Except("Invalid operation: {}".format(value), True)
-        else:
-            return Except("Unknown exception: {}".format(value), False)
 
 class Except:
 

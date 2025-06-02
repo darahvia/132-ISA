@@ -227,6 +227,14 @@ if __name__ == "__main__":
         sys.exit(1)
     filename = sys.argv[1]
     with open(filename, "r") as f:
-        lines = [line.strip() for line in f if line.strip() and not line.strip().startswith("//")]
+        lines = []
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("//"):
+                continue
+            if ";" in line:
+                line = line.split(";")[0].strip()
+            if line:
+                lines.append(line)
     prog = Program(lines)
     prog.run()

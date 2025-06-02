@@ -1,11 +1,10 @@
-MOV R1 #5
-MOV R2 #12
-MOV R3 #7
-MOV R4 #2
-PRNT R1
-PRNT R2
-SUB R2 R1
-PRNT R2
-ADD R1 R2
-PRNT R1
-PRNT R3
+MOV R1 #0       ; R1 = counter
+MOV R2 #1       ; R2 = toggle jump (simulate condition)
+MOV R3 #2       ; R3 = extra value
+
+PRNT R1         ; Print R1
+ADD R1 R3       ; R1 = R1 + 2
+PRNT R1         ; Print new R1
+JMP end         ; Unconditionally jump to end
+
+PRNT R1         ; Final print

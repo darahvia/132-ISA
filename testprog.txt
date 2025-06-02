@@ -1,6 +1,11 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 MOV R1 #5
 MOV R2 #12
+=======
+MOV R1 15
+MOV R2 #13
+>>>>>>> Stashed changes
 MOV R3 #7
 MOV R4 #2
 PRNT R1
@@ -8,6 +13,7 @@ PRNT R2
 SUB R2 R1
 PRNT R2
 ADD R1 R2
+<<<<<<< Updated upstream
 PRNT R1
 PRNT R3
 =======
@@ -22,4 +28,7 @@ PRNT R1
 DIV R1 R2
 PRNT R2
 EOP             ; End of program
+>>>>>>> Stashed changes
+=======
+PRNT R1
 >>>>>>> Stashed changes

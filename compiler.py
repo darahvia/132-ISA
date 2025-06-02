@@ -72,9 +72,11 @@ class Instruction:
 
     @staticmethod
     def encodeOp(operand):
+        print(f"Encoding operand: '{operand}'")
         # Handle indirect (@), direct (&), immediate (#), indexed, register, symbolic, stack, etc.
 
-        operand = operand.strip()
+        if operand.startswith("(") and operand.endswith(")"):
+            operand = operand[1:-1].strip()
 
         # Stack operations PUSH or POP encoded as mode 101 or 110, address is SPR (assumed 255)
         if operand == "PUSH":
@@ -147,9 +149,11 @@ class Instruction:
             addr = format(reg_num, '08b')
             return mode, addr
 
-        if operand.startswith("R"):  # register direct
-            mode = "001"
+        if operand.startswith("R"):
             reg_num = int(operand[1:])
+            if reg_num == 0:
+                raise Exception("R0 is not a valid register in this ISA.")
+            mode = "001"
             addr = format(reg_num, '08b')
             return mode, addr
 
@@ -159,11 +163,16 @@ class Instruction:
             mode = "010"  # direct memory
             addr = format(addr_num, '08b')
             return mode, addr
-        except Exception:
-            pass
-
-        # Default fallback
-        return "000", "00000000"
+        except KeyError:
+        # Fallback to direct value if symbol not found
+            if operand.isdigit() or (operand[0] == '-' and operand[1:].isdigit()):
+                mode = "011"
+                imm_val = int(operand)
+                addr = format(imm_val & 0xFF, '08b')  # 8-bit unsigned
+                return mode, addr
+            else:
+                 # Default fallback
+                return "000", "00000000"
 
     @staticmethod
     def encodeProgram(program):

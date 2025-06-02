@@ -81,8 +81,6 @@ class Program:
     def write(self, dest, src, movcode):
         if movcode == "MOV":
             if hasattr(Access, 'store'):
-                # You need to determine the correct type ("reg", "mem", or "var")
-                # Here, let's assume register for demonstration:
                 Access.store("reg", dest, src)
             return src
         elif movcode == "PUSH":
@@ -150,7 +148,12 @@ class Program:
             write_bit = opcode[1]
             
             if execute_bit == '1':
-                self.execute(None, operation, op1_value, op2_value)
+                result = self.execute(None, operation, op1_value, op2_value)
+                if operation in ["ADD", "SUB", "MUL", "DIV", "MOD"]:
+                    dest_reg_num = int(op1_addr, 2)
+                    dest_reg_name = f"R{dest_reg_num}"
+                    dest_reg_addr = storage.variable.load(dest_reg_name, isCode=False)
+                    Access.store("reg", dest_reg_addr, result)
             elif write_bit == '1':
                 if operation == "MOV":
                     dest_reg_num = int(op1_addr, 2)
@@ -172,27 +175,26 @@ class Program:
             storage.register.store(pc_addr, int(pc_val) + 1)
     
     def getOp(self, inscode):
-        mode = inscode[0:3]    
-        addr = inscode[3:]     
+        mode = inscode[0:3]
+        addr = inscode[3:]
 
-        if mode == '000':  
-            # Immediate value, treat as integer
+        if mode == '000':
             return int(addr, 2)
-        elif mode == '001':  
+        elif mode == '001':
             reg_name = f"R{int(addr, 2)}"
             reg_addr = storage.variable.load(reg_name, isCode=False)
             return storage.register.load(reg_addr, isCode=False)
-        elif mode == '010':  
-            reg_name = f"R{int(addr, 2)}"
-            reg_addr = storage.variable.load(reg_name, isCode=False)
-            mem_addr = storage.register.load(reg_addr, isCode=False)
-            return storage.memory.load(int(mem_addr), isCode=False)
-        elif mode == '100':  
+        elif mode == '010':
+            mem_addr = int(addr, 2)
+            return storage.memory.load(mem_addr)
+        elif mode == '011':  # Immediate value
+            return int(addr, 2)
+        elif mode == '100':
             index_reg = storage.variable.load('I1', isCode=False)
             index_val = storage.register.load(index_reg, isCode=False)
             displacement = int(addr, 2)
             return storage.memory.load(index_val + displacement, isCode=False)
-        elif mode == '101':  
+        elif mode == '101':
             return AddressingMode.stack("pop")
         else:
             raise ValueError(f"Unsupported addressing mode: {mode}")

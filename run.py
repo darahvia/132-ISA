@@ -229,4 +229,5 @@ if __name__ == "__main__":
     with open(filename, "r") as f:
         lines = [line.strip() for line in f if line.strip() and not line.strip().startswith("//")]
     prog = Program(lines)
+    
     prog.run()

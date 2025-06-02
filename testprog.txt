@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 MOV R1 #5
 MOV R2 #12
 MOV R3 #7
@@ -9,3 +10,16 @@ PRNT R2
 ADD R1 R2
 PRNT R1
 PRNT R3
+=======
+MOV R1 #5       ; R1 = 5
+MOV R2 #3       ; R2 = 3
+ADD R1 R2       ; R1 = R1 + R2 (R1 = 8)
+PRNT R1         ; Print R1 (should print 8)
+SUB R1 R2       ; R1 = R1 - R2 (R1 = 5)
+PRNT R1         ; Print R1 (should print 5)
+MUL R1 R2
+PRNT R1
+DIV R1 R2
+PRNT R2
+EOP             ; End of program
+>>>>>>> Stashed changes

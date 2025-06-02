@@ -143,19 +143,17 @@ class AddressingMode:
 		top_stack_ptr = storage.register.load(int(tsp_addr))
 		
 		if stack_option.lower() == "push":
-			# Push: increment TSP and return new top address using Precision
-			new_top = Precision.spbin2dec(Precision.dec2spbin(top_stack_ptr + 1))
+			new_top = top_stack_ptr + 1
 			storage.register.store(tsp_addr, new_top)
-			return int(Precision.spbin2dec(Precision.dec2spbin(new_top)))
+			return new_top
 			
 		elif stack_option.lower() == "pop":
 			# Pop: return current top address and decrement TSP
 			if top_stack_ptr <= stack_ptr:
-				raise RuntimeError("Stack underflow - cannot pop from empty stack")
+				raise RuntimeError("Stack underflow")
 			current_top = top_stack_ptr
-			decremented = Precision.spbin2dec(Precision.dec2spbin(top_stack_ptr - 1))
-			storage.register.store(tsp_addr, decremented)
-			return int(Precision.spbin2dec(Precision.dec2spbin(current_top)))
+			storage.register.store(tsp_addr, current_top - 1)
+			return current_top
 			
 		elif stack_option.lower() == "top":
 			# Top: return current top address without modification

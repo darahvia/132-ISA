@@ -94,7 +94,7 @@ for i in range(len(register_list)):
 # Storage.setVariable(register,"MPR",br+14,mmpr)
 # Storage.setVariable(register,"NMP",br+15,mmpr+1)
 varpr = 1
-var_reglen = 7
+var_reglen = 20
 Storage.setVariables("R",varpr,var_reglen)	# R1 to R7
 Storage.setVariables("M",varpr,var_reglen)	# M1 to M7
 apr = 24

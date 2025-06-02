@@ -73,8 +73,6 @@ class Instruction:
     @staticmethod
     def encodeOp(operand):
         print(f"Encoding operand: '{operand}'")
-        # Handle indirect (@), direct (&), immediate (#), indexed, register, symbolic, stack, etc.
-
         if operand.startswith("(") and operand.endswith(")"):
             operand = operand[1:-1].strip()
 
